@@ -1,0 +1,127 @@
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+class Order {
+    int orderId;
+    int productId;
+    int quantity;
+    double unitPrice;
+
+    public Order(int orderId, int productId, int quantity, double unitPrice) {
+        this.orderId = orderId;
+        this.productId = productId;
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
+    }
+}
+
+public class AbasErpDeveloper {
+
+    public static void main(String[] args) {
+        List<Order> orders = new ArrayList<>();
+        orders.add(new Order(1000, 2000, 12, 100.51));
+        orders.add(new Order(1000, 2001, 31, 200));
+        orders.add(new Order(1000, 2002, 22, 150.86));
+        orders.add(new Order(1001, 2001, 88, 44.531));
+        orders.add(new Order(1001, 2002, 121, 88.11));
+        orders.add(new Order(1001, 2004, 74, 211));
+        orders.add(new Order(1002, 2002, 14, 12.1));
+        orders.add(new Order(1002, 2003, 2, 22.3));
+        orders.add(new Order(1002, 2004, 3, 12.1));
+        orders.add(new Order(1002, 2003, 8, 94));
+        orders.add(new Order(1002, 2002, 16, 44.1));
+        orders.add(new Order(1002, 2005, 9, 90));
+        orders.add(new Order(1002, 2006, 19, 90));
+
+        // Question a
+        System.out.println("Question a:");
+        Map<Integer, Integer> productIdToTotalQuantity = new HashMap<>();
+        Map<Integer, Double> productIdToTotalPrice = new HashMap<>();
+        for (Order order : orders) {
+            int productId = order.productId;
+            int quantity = order.quantity;
+            double unitPrice = order.unitPrice;
+
+            if (!productIdToTotalQuantity.containsKey(productId)) {
+                productIdToTotalQuantity.put(productId, 0);
+                productIdToTotalPrice.put(productId, 0.0);
+            }
+
+            productIdToTotalQuantity.put(productId, productIdToTotalQuantity.get(productId) + quantity);
+            productIdToTotalPrice.put(productId, productIdToTotalPrice.get(productId) + (quantity * unitPrice));
+        }
+
+        int orderId = 1000;
+        for (int productId : productIdToTotalPrice.keySet()) {
+            double totalPrice = productIdToTotalPrice.get(productId);
+            int totalQuantity = productIdToTotalQuantity.get(productId);
+            System.out.printf("Order %d: Product %d Total Price: %.2f%n", orderId, productId, totalPrice);
+            orderId++;
+        }
+
+        // Question b
+        System.out.println("\nQuestion b:");
+        double totalQuantity = 0;
+        for (Order order : orders) {
+            totalQuantity += order.quantity;
+        }
+
+        double averagePrice = 0;
+        for (Order order : orders) {
+            averagePrice += (order.quantity / totalQuantity) * order.unitPrice;
+        }
+
+        System.out.printf("Average Price: %.2f%n", averagePrice);
+
+        // Question c
+        System.out.println("\nQuestion c:");
+        Map<Integer, Integer> productIdToTotalCount = new HashMap<>();
+        for (Order order : orders) {
+            int productId = order.productId;
+            if (!productIdToTotalCount.containsKey(productId)) {
+                productIdToTotalCount.put(productId, 0);
+            }
+            productIdToTotalCount.put(productId, productIdToTotalCount.get(productId) + 1);
+        }
+
+        double runningTotalPrice = 0;
+        for (int productId : productIdToTotalCount.keySet()) {
+            double totalPrice = 0;
+            int count = productIdToTotalCount.get(productId);
+            for (int i = 0; i < count; i++) {
+                totalPrice += orders.get(i).unitPrice;
+            }
+
+            double averagePrice1 = totalPrice / count;
+            System.out.printf("Product %d Average Price: %.2f%n", productId, averagePrice1);
+        }
+
+        // Question d
+        System.out.println("\nQuestion d:");
+        Map<Integer, Map<Integer, Integer>> orderIdToProductQuantity = new HashMap<>();
+        for (Order order : orders) {
+            int orderId1 = order.orderId;
+            int productId = order.productId;
+            int quantity = order.quantity;
+
+            if (!orderIdToProductQuantity.containsKey(orderId1)) {
+                orderIdToProductQuantity.put(orderId1, new HashMap<>());
+            }
+
+            if (!orderIdToProductQuantity.get(orderId1).containsKey(productId)) {
+                orderIdToProductQuantity.get(orderId1).put(productId, 0);
+            }
+
+            orderIdToProductQuantity.get(orderId1).put(productId, orderIdToProductQuantity.get(orderId1).get(productId) + quantity);
+        }
+                     for (int orderId1 : orderIdToProductQuantity.keySet()) {
+                System.out.printf("Order %d: ", orderId1);
+                for (int productId : orderIdToProductQuantity.get(orderId1).keySet()) {
+                    System.out.printf("Product %d: %d, ", productId, orderIdToProductQuantity.get(orderId1).get(productId));
+                }
+                System.out.println();
+            }
+}
+}
