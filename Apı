@@ -1,0 +1,85 @@
+	public Actions getKpsInformations1(List<PoliceIslemleriModel> policeIslemleriModelList_Giris,
+			KpsInformationsModel kpsInformationsModel) throws TcknExceptions, InterruptedException, IOException, ParseException, KPSExceptions	{
+		
+		log.info("--KPS  Islemleri--");
+		for(int i=0; i<policeIslemleriModelList_Giris.size(); i++) {
+			if (policeIslemleriModelList_Giris.get(i).getTckn().equals("") 
+					|| policeIslemleriModelList_Giris.get(i).getTckn().equals(null))	{
+				
+				log.info(policeIslemleriModelList_Giris.get(i).getPolicyDetail() + " police bilgileri icin tckn bos!!");
+				throw new TcknExceptions(policeIslemleriModelList_Giris, i);
+			}
+
+			Root response = kpsMiniService(policeIslemleriModelList_Giris.get(i).getTckn(), 
+					utilityMethods.changeDateFormatForGRPH(policeIslemleriModelList_Giris.get(i).getBirthdate()));
+			 		
+			if(response.data.ad == null) {
+			
+				log.info(policeIslemleriModelList_Giris.get(i).getTckn() + " kimlik bilgileri icin tckn KPS Hatası!!");
+				stopAS400Session();
+				throw new KPSExceptions(policeIslemleriModelList_Giris, i);
+			}	
+			
+			setKpsMiniServisToModel(response);
+
+			log.info("KPS sorgusundan alinan veriler KPSmodel sinifina implemente edildi.");
+			
+			if(kpsInformationsModelList.get(i).getStatu().equals("K"))
+			{
+				log.info("Musteri vefat etmistir.!");
+				stopAS400Session();
+				throw new KPSExceptions(policeIslemleriModelList_Giris, i, 
+						"KPS Hatasi!! -- K olup işleme devam edilemez!");
+			}
+		}
+
+		return this;
+	}
+
+	public static Root kpsMiniService(String tckn, String dogumTarihi){
+    	OkHttpClient client = new OkHttpClient();
+
+    	Root root = null;
+		int dogumGunuGun = Integer.parseInt(dogumTarihi.split("/")[0]);
+		int dogumGunuAy = Integer.parseInt(dogumTarihi.split("/")[1]);
+		int dogumGunuYil = Integer.parseInt(dogumTarihi.split("/")[2]);
+		
+		String body = 
+
+                "{"+
+                "\"adimId\"" +":"+ "9" +"," +
+                "\"dogumTarihi\""+":" + "{" +
+                    "\"ay\"" + ":" + dogumGunuAy + "," +
+                    "\"gun\"" + ":" + dogumGunuGun + "," +
+                    "\"yil\"" + ":" + dogumGunuYil + "}" +
+                "," +
+                "\"ekipId\""+":" + "99999" + "," +
+                "\"kimlikNo\""+":" + tckn + "," +
+                "\"sorgulamaYapanTckn\""+":" + "88888888888" + "," +
+                "\"uygulamaId\""+":" + "6"  +
+                    "}" ;
+		
+		try {
+			
+			RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), body);
+			String url = GetGrupHayatBasvuruDegisiklikSonlanmaData.kpsURL;
+			Request request = new Request
+					.Builder()
+					.url(url)
+					.addHeader("Content-Type", "application/json")
+					.addHeader("x-auth-config", "internal")
+					.addHeader("x-api-key", 11111)
+					.post(requestBody)
+					.build();
+
+			Response response = client.newCall(request).execute();
+			root = new ObjectMapper().readValue(response.body().string(), Root.class);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		    log.error("kpsMiniService islemleri sirasinda hata alindi." + e.getMessage());
+		}
+		
+		log.info("KPS Mini Servisine baglandi.!");
+		return root;
+    }
